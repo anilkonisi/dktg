@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ACCOUNT_LOCATOR:  ${{ secrets.ACCOUNT_LOCATOR }}
-      SNOWFLAKE_USER:     ${{ secrets.SNOWFLAKE_USER }}
+      LOGIN_NAME:     ${{ secrets.LOGIN_NAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
       SNOWFLAKE_ROLE:     ${{ secrets.SNOWFLAKE_ROLE }}
       SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
@@ -30,7 +30,7 @@ jobs:
           import os, sys
           import snowflake.connector as sf
           acct=os.environ["ACCOUNT_LOCATOR"]
-          user=os.environ["SNOWFLAKE_USER"]
+          user=os.environ["LOGIN_NAME"]
           pwd=os.environ["SNOWFLAKE_PASSWORD"]
           role=os.environ["SNOWFLAKE_ROLE"]
           wh=os.environ["SNOWFLAKE_WAREHOUSE"]
@@ -48,7 +48,7 @@ jobs:
                   schema=sc,
               )
               cs = ctx.cursor()
-              cs.execute("SELECT CURRENT_ACCOUNT(), CURRENT_REGION(), CURRENT_ROLE(), CURRENT_WAREHOUSE(), CURRENT_DATABASE(), CURRENT_SCHEMA()")
+              cs.execute("SELECT CURRENT_ACCOUNT(),CURRENT_USER() CURRENT_REGION(), CURRENT_ROLE(), CURRENT_WAREHOUSE(), CURRENT_DATABASE(), CURRENT_SCHEMA()")
               one = cs.fetchone()
               print("Connected. Context:", " | ".join(str(x) for x in one))
           except Exception as e:
