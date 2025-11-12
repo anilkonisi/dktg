@@ -1,0 +1,60 @@
+name: Snowflake Connectivity Test
+on:
+  workflow_dispatch: {}
+
+jobs:
+  connect:
+    runs-on: ubuntu-latest
+    env:
+      ACCOUNT_LOCATOR:  ${{ secrets.ACCOUNT_LOCATOR }}
+      SNOWFLAKE_USER:     ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      SNOWFLAKE_ROLE:     ${{ secrets.SNOWFLAKE_ROLE }}
+      SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+      SNOWFLAKE_DB:       ${{ secrets.SNOWFLAKE_DB }}
+      SNOWFLAKE_SCHEMA:   ${{ secrets.SNOWFLAKE_SCHEMA }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Snowflake connector
+        run: pip install snowflake-connector-python
+
+      - name: Test connection (no secrets printed)
+        shell: python
+        run: |
+          import os, sys
+          import snowflake.connector as sf
+          acct=os.environ["ACCOUNT_LOCATOR"]
+          user=os.environ["SNOWFLAKE_USER"]
+          pwd=os.environ["SNOWFLAKE_PASSWORD"]
+          role=os.environ["SNOWFLAKE_ROLE"]
+          wh=os.environ["SNOWFLAKE_WAREHOUSE"]
+          db=os.environ["SNOWFLAKE_DB"]
+          sc=os.environ["SNOWFLAKE_SCHEMA"]
+
+          try:
+              ctx = sf.connect(
+                  account=acct,
+                  user=user,
+                  password=pwd,
+                  role=role,
+                  warehouse=wh,
+                  database=db,
+                  schema=sc,
+              )
+              cs = ctx.cursor()
+              cs.execute("SELECT CURRENT_ACCOUNT(), CURRENT_REGION(), CURRENT_ROLE(), CURRENT_WAREHOUSE(), CURRENT_DATABASE(), CURRENT_SCHEMA()")
+              one = cs.fetchone()
+              print("Connected. Context:", " | ".join(str(x) for x in one))
+          except Exception as e:
+              print("Connection failed:", e)
+              sys.exit(1)
+          finally:
+              try:
+                  cs.close(); ctx.close()
+              except: pass
