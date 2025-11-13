@@ -8,7 +8,7 @@ jobs:
     env:
       ACCOUNT_LOCATOR:  ${{ secrets.ACCOUNT_LOCATOR }}
       LOGIN_NAME:     ${{ secrets.LOGIN_NAME }}
-      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      SNOWFLAKE_PASSWORD: "@WSXcde3210987"
       SNOWFLAKE_ROLE:     ${{ secrets.SNOWFLAKE_ROLE }}
       SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
       SNOWFLAKE_DB:       ${{ secrets.SNOWFLAKE_DB }}
@@ -48,7 +48,7 @@ jobs:
                   schema=sc,
               )
               cs = ctx.cursor()
-              cs.execute("SELECT CURRENT_ACCOUNT(),CURRENT_USER() CURRENT_REGION(), CURRENT_ROLE(), CURRENT_WAREHOUSE(), CURRENT_DATABASE(), CURRENT_SCHEMA()")
+              cs.execute("SELECT CURRENT_ACCOUNT(),CURRENT_USER(), CURRENT_REGION(), CURRENT_ROLE(), CURRENT_WAREHOUSE(), CURRENT_DATABASE(), CURRENT_SCHEMA()")
               one = cs.fetchone()
               print("Connected. Context:", " | ".join(str(x) for x in one))
           except Exception as e:
