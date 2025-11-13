@@ -1,0 +1,9 @@
+type: snowflake
+account: NESSPARTNERORG-NESS_AZURE_FROSTGUARD
+role: DK_POC_RW_ROLE
+warehouse: DEVELOPER_WH
+database: DATAKITCHEN_POC
+schema: POC_SCHEMA
+auth:
+  user: AKONISI
+  password_env: "@WSXcde3210987"
