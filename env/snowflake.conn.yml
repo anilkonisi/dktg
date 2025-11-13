@@ -1,0 +1,9 @@
+type: snowflake
+account: ${ACCOUNT_LOCATOR}
+role: ${SNOWFLAKE_ROLE}
+warehouse: ${SNOWFLAKE_WAREHOUSE}
+database: ${SNOWFLAKE_DB}
+schema: ${SNOWFLAKE_SCHEMA}
+auth:
+  user: ${LOGIN_NAME}
+  password_env: SNOWFLAKE_PASSWORD
