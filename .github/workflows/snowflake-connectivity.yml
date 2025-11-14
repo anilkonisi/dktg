@@ -26,9 +26,12 @@ jobs:
         run: pip install snowflake-connector-python[pandas]
 
       - name: Test Snowflake Connection
+        shell: python                  # This line was missing – this fixes the "import: command not found" error
         run: |
           import os
           import snowflake.connector
+
+          print("Attempting to connect to Snowflake...")
 
           conn = snowflake.connector.connect(
               account=os.environ["SNOWFLAKE_ACCOUNT"],
@@ -42,10 +45,30 @@ jobs:
 
           cur = conn.cursor()
           try:
-              cur.execute("SELECT CURRENT_ACCOUNT(), CURRENT_USER(), CURRENT_ROLE(), CURRENT_WAREHOUSE(), CURRENT_DATABASE(), CURRENT_SCHEMA()")
+              cur.execute("""
+                  SELECT 
+                    CURRENT_ACCOUNT(), 
+                    CURRENT_USER(), 
+                    CURRENT_ROLE(), 
+                    CURRENT_WAREHOUSE(), 
+                    CURRENT_DATABASE(), 
+                    CURRENT_SCHEMA(),
+                    CURRENT_REGION()
+              """)
               result = cur.fetchone()
-              print("Successfully connected!")
-              print(f"Account: {result[0]} | User: {result[1]} | Role: {result[2]} | WH: {result[3]} | DB: {result[4]} | Schema: {result[5]}")
+              print("Successfully connected to Snowflake!")
+              print(f"Account   : {result[0]}")
+              print(f"User      : {result[1]}")
+              print(f"Role      : {result[2]}")
+              print(f"Warehouse : {result[3]}")
+              print(f"Database  : {result[4]}")
+              print(f"Schema    : {result[5]}")
+              print(f"Region    : {result[6]}")
+          except Exception as e:
+              print("Connection failed!")
+              print(str(e))
+              raise
           finally:
               cur.close()
               conn.close()
+              print("Connection closed.")
