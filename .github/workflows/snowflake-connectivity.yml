@@ -6,13 +6,14 @@ jobs:
   connect:
     runs-on: ubuntu-latest
     env:
-      ACCOUNT_LOCATOR:  ${{ secrets.ACCOUNT_LOCATOR }}
-      LOGIN_NAME:     ${{ secrets.LOGIN_NAME }}
-      SNOWFLAKE_PASSWORD: "@WSXcde3210987"
-      SNOWFLAKE_ROLE:     ${{ secrets.SNOWFLAKE_ROLE }}
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
       SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
-      SNOWFLAKE_DB:       ${{ secrets.SNOWFLAKE_DB }}
-      SNOWFLAKE_SCHEMA:   ${{ secrets.SNOWFLAKE_SCHEMA }}
+      SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+      SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -22,39 +23,29 @@ jobs:
           python-version: "3.11"
 
       - name: Install Snowflake connector
-        run: pip install snowflake-connector-python
+        run: pip install snowflake-connector-python[pandas]
 
-      - name: Test connection (no secrets printed)
-        shell: python
+      - name: Test Snowflake Connection
         run: |
-          import os, sys
-          import snowflake.connector as sf
-          acct=os.environ["ACCOUNT_LOCATOR"]
-          user=os.environ["LOGIN_NAME"]
-          pwd=os.environ["SNOWFLAKE_PASSWORD"]
-          role=os.environ["SNOWFLAKE_ROLE"]
-          wh=os.environ["SNOWFLAKE_WAREHOUSE"]
-          db=os.environ["SNOWFLAKE_DB"]
-          sc=os.environ["SNOWFLAKE_SCHEMA"]
+          import os
+          import snowflake.connector
 
+          conn = snowflake.connector.connect(
+              account=os.environ["SNOWFLAKE_ACCOUNT"],
+              user=os.environ["SNOWFLAKE_USER"],
+              password=os.environ["SNOWFLAKE_PASSWORD"],
+              role=os.environ["SNOWFLAKE_ROLE"],
+              warehouse=os.environ["SNOWFLAKE_WAREHOUSE"],
+              database=os.environ["SNOWFLAKE_DATABASE"],
+              schema=os.environ["SNOWFLAKE_SCHEMA"]
+          )
+
+          cur = conn.cursor()
           try:
-              ctx = sf.connect(
-                  account=acct,
-                  user=user,
-                  password=pwd,
-                  role=role,
-                  warehouse=wh,
-                  database=db,
-                  schema=sc,
-              )
-              cs = ctx.cursor()
-              cs.execute("SELECT CURRENT_ACCOUNT(),CURRENT_USER(), CURRENT_REGION(), CURRENT_ROLE(), CURRENT_WAREHOUSE(), CURRENT_DATABASE(), CURRENT_SCHEMA()")
-              one = cs.fetchone()
-              print("Connected. Context:", " | ".join(str(x) for x in one))
-          except Exception as e:
-              print("Connection failed:", e)
-              sys.exit(1)
+              cur.execute("SELECT CURRENT_ACCOUNT(), CURRENT_USER(), CURRENT_ROLE(), CURRENT_WAREHOUSE(), CURRENT_DATABASE(), CURRENT_SCHEMA()")
+              result = cur.fetchone()
+              print("Successfully connected!")
+              print(f"Account: {result[0]} | User: {result[1]} | Role: {result[2]} | WH: {result[3]} | DB: {result[4]} | Schema: {result[5]}")
           finally:
-              try:
-                  cs.close(); ctx.close()
-              except: pass
+              cur.close()
+              conn.close()
