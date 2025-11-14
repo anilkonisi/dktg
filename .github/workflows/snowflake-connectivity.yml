@@ -25,13 +25,26 @@ jobs:
       - name: Install Snowflake connector
         run: pip install snowflake-connector-python[pandas]
 
+      # This step proves secrets are loaded
+      - name: Debug - Check secrets are present (safe way)
+        run: |
+          echo "SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT != '' && 'set' || 'MISSING' }}"
+          echo "SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER != '' && 'set' || 'MISSING' }}"
+          echo "SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD != '' && 'set' || 'MISSING' }}"
+
       - name: Test Snowflake Connection
-        shell: python                  # This line was missing – this fixes the "import: command not found" error
+        shell: python
         run: |
           import os
           import snowflake.connector
 
-          print("Attempting to connect to Snowflake...")
+          print("Connecting to Snowflake...")
+          print(f"Account: {os.environ['SNOWFLAKE_ACCOUNT']}")
+          print(f"User: {os.environ['SNOWFLAKE_USER']}")
+          print(f"Role: {os.environ['SNOWFLAKE_ROLE']}")
+          print(f"Warehouse: {os.environ['SNOWFLAKE_WAREHOUSE']}")
+          print(f"Database: {os.environ['SNOWFLAKE_DATABASE']}")
+          print(f"Schema: {os.environ['SNOWFLAKE_SCHEMA']}")
 
           conn = snowflake.connector.connect(
               account=os.environ["SNOWFLAKE_ACCOUNT"],
@@ -45,30 +58,16 @@ jobs:
 
           cur = conn.cursor()
           try:
-              cur.execute("""
-                  SELECT 
-                    CURRENT_ACCOUNT(), 
-                    CURRENT_USER(), 
-                    CURRENT_ROLE(), 
-                    CURRENT_WAREHOUSE(), 
-                    CURRENT_DATABASE(), 
-                    CURRENT_SCHEMA(),
-                    CURRENT_REGION()
-              """)
-              result = cur.fetchone()
-              print("Successfully connected to Snowflake!")
-              print(f"Account   : {result[0]}")
-              print(f"User      : {result[1]}")
-              print(f"Role      : {result[2]}")
-              print(f"Warehouse : {result[3]}")
-              print(f"Database  : {result[4]}")
-              print(f"Schema    : {result[5]}")
-              print(f"Region    : {result[6]}")
-          except Exception as e:
-              print("Connection failed!")
-              print(str(e))
-              raise
+              cur.execute("SELECT CURRENT_ACCOUNT(), CURRENT_USER(), CURRENT_ROLE(), CURRENT_WAREHOUSE(), CURRENT_DATABASE(), CURRENT_SCHEMA(), CURRENT_REGION()")
+              row = cur.fetchone()
+              print("SUCCESSFULLY CONNECTED TO SNOWFLAKE!")
+              print(f"Account   : {row[0]}")
+              print(f"User      : {row[1]}")
+              print(f"Role      : {row[2]}")
+              print(f"Warehouse : {row[3]}")
+              print(f"Database  : {row[4]}")
+              print(f"Schema    : {row[5]}")
+              print(f"Region    : {row[6]}")
           finally:
               cur.close()
               conn.close()
-              print("Connection closed.")
