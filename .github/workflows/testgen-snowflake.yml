@@ -1,0 +1,38 @@
+# .github/workflows/testgen-snowflake.yml
+name: DataKitchen TestGen - Snowflake
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  run-testgen:
+    runs-on: ubuntu-latest
+
+    env:
+      ACCOUNT_LOCATOR: NESS_AZURE_FROSTGUARD        
+      LOGIN_NAME: ${{ secrets.LOGIN_NAME }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+      SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+      SNOWFLAKE_DB: ${{ secrets.SNOWFLAKE_DB }}
+      SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install TestGen CLI
+        run: pip install testgen-cli
+
+      - name: Test connection 
+        run: testgen connections test --code my_snowflake_conn   
+
+      - name: Run all tests in project
+        run: |
+          testgen run --project-code YOUR_PROJECT_CODE
